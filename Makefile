@@ -10,6 +10,9 @@ SRC_FILES=$(shell find $(SRC_DIR)/ -name "*.cpp")
 OBJS=$(patsubst $(SRC_DIR)/%.cpp, $(BUILD_DIR)/%.o, $(SRC_FILES))
 DEPS=$(patsubst $(SRC_DIR)/%.cpp, $(BUILD_DIR)/%.d, $(SRC_FILES))
 
+IMGS=$(wildcard assets/*)
+CONVERTED_IMGS=$(addsuffix .ppm, $(basename $(patsubst assets/%, $(BUILD_DIR)/assets/%, $(IMGS))))
+
 BUILD_DIRS=$(sort $(dir $(OBJS)))
 
 $(BUILD_DIR)/$(TARGET): $(OBJS) external/fmt/build/libfmt.a | $(BUILD_DIR)
@@ -18,8 +21,16 @@ $(BUILD_DIR)/$(TARGET): $(OBJS) external/fmt/build/libfmt.a | $(BUILD_DIR)
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp | $(BUILD_DIR) $(BUILD_DIRS)
 	$(CXX) $(CXXFLAGS) -c $< -o $@ -MMD
 
-run: $(BUILD_DIR)/$(TARGET)
+run: $(BUILD_DIR)/$(TARGET) $(CONVERTED_IMGS)
 	$(BUILD_DIR)/$(TARGET)
+
+$(BUILD_DIR)/assets/temp.ppm:
+	mkdir -p $(BUILD_DIR)/assets
+	./env/bin/python3 imageconvert.py assets/temp.png $(BUILD_DIR)/assets/temp.ppm
+
+$(BUILD_DIR)/assets/another.ppm:
+	mkdir -p $(BUILD_DIR)/assets
+	./env/bin/python3 imageconvert.py assets/another.png $(BUILD_DIR)/assets/another.ppm
 
 $(BUILD_DIRS):
 	mkdir -p $@
